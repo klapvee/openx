@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>OpenX Tester</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<meta http-equiv="content-language" content="nl" />
+		<meta name="language" content="nl" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<style type="text/css">
+			blockquote {
+				width: 700px;
+			}
+		</style>
+		<script type="text/javascript" src="js/openx.adserver.js"></script>
+		<script type="text/javascript">
+			
+			var OA_zones = 
+			{
+				'leaderboard' : 0,
+				'medium-rectangle' : 0
+			}
+						
+			window.onload = function()
+			{
+				//utility
+				openx.init({
+					url: 'http://yourdomain.com/live/www/delivery/spcjs.php'
+				});
+			}
+
+			
+		</script>
+
+	</head>
+	<body>
+			
+		<blockquote>
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sed ligula at quam aliquam eleifend a ac justo. Fusce non mi at enim 
+			dictum pulvinar. Pellentesque fermentum lectus et velit euismod eleifend ac ac purus. Morbi arcu quam, varius non mattis sit amet, iaculis nec lacus. Duis vulputate mauris ac tortor dignissim a dapibus quam consequat. Fusce tincidunt turpis et nisl congue fringilla. Sed condimentum ipsum ipsum. Praesent at felis quis diam tristique gravida sit amet a mauris. Etiam dignissim magna ac eros tincidunt pulvinar ac sed dolor. Sed augue turpis, ultrices sit amet viverra id, pharetra accumsan magna. Proin id odio enim. Sed neque erat, consequat ac rutrum id, adipiscing vel nibh. Vivamus quis risus sed est sollicitudin commodo.
+			<div id="leaderboard" style="float: left; border: solid 1px #ff0000;"></div>
+			Aliquam cursus tempor quam, vel vehicula eros malesuada sed. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec interdum augue eget massa eleifend vehicula. Etiam ante ante, varius eu sollicitudin a, hendrerit sed magna. Duis a hendrerit massa. Integer vulputate consequat leo. Pellentesque euismod libero sed magna aliquet sed pharetra lorem rutrum. Morbi convallis hendrerit massa euismod tincidunt. Nunc id tellus orci, in fermentum metus. Cras volutpat nisi vel tortor feugiat dignissim.
+
+			Ut quis convallis leo. Phasellus a lacus nec arcu ornare porttitor. Nunc laoreet tortor id magna sollicitudin hendrerit. Phasellus sollicitudin lacus vel felis malesuada ultricies. Nulla facilisi. Integer leo nisi, vehicula sit amet consequat pretium, posuere placerat nisi. Donec id libero dui, a tempus velit. Maecenas a mauris libero.
+
+			Nullam dignissim, nisl eget ultrices lacinia, neque ante egestas leo, sed semper libero odio at sem. Donec eu mi ut neque mollis faucibus sed eu purus. Aliquam mattis pharetra luctus. Vestibulum porta pulvinar augue at malesuada. Pellentesque eleifend sodales enim non condimentum. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Fusce ut felis in nunc venenatis vulputate. Mauris consequat fringilla rhoncus.
+			<div class="medium-rectangle" id="medium-rectangle" style="float: left; border: solid 1px #0000ff;"></div>
+			Aliquam erat volutpat. Maecenas ac fringilla risus. Suspendisse et massa lorem. Nullam id quam non erat hendrerit interdum eu sit amet purus. Suspendisse potenti. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce imperdiet mauris id nisi pellentesque blandit. Ut a nunc vel est ultricies tincidunt. Aenean vitae nulla lectus, sit amet rhoncus magna. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed hendrerit congue ligula, in convallis ipsum malesuada eu. Curabitur augue dui, bibendum in ornare id, molestie sed neque. 
+		</blockquote>
+		
+	</body>
+</html>
