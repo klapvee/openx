@@ -37,203 +37,391 @@
  */
 
 /**
- * script loader object
- */
-
-function loader(config)
-{
-    this.config = config;
-    this.config.timeout = 1000;
-    this.loaded = false;
-    this.scriptBlock = false;
-
-    this.load = function()
-    {
-        openx.writeActivity = true;
-        this.scriptBlock = document.createElement('SCRIPT');
-        this.scriptBlock.src = this.config.url.replace(/\&amp;/gi, '&');
-        this.scriptBlock.type = 'text/javascript';
-        this.scriptBlock._super = this;
-
-        this.timer = setTimeout(function(_this) {
-            window.stop();
-            openx.writeDebug('SCRIPT TIME OUT: ' + _this.config.url);
-        }, this.config.timeout, this);
-
-        if (!document.getElementsByTagName('HEAD')[0])
-        {
-            openx.writeDebug('HEAD TAG NOT FOUND');
-            return false;
-        } else {
-            document.getElementsByTagName('HEAD')[0].appendChild(this.scriptBlock);
-        }
-
-        if (this.scriptBlock.readyState)
-        {
-            this.scriptBlock._this = this;
-            this.scriptBlock.onreadystatechange = function()
-            {
-                if (this._this.scriptBlock.readyState == 'complete' || this._this.scriptBlock.readyState == 'loaded')
-                {
-                        this._this.callback(this._this);
-                }
-            }
-        } else {
-            this.scriptBlock.onload = this.callback(this.scriptBlock._super);
-        }
-
-        return true;
-    }
-
-    this.callback = function(_this)
-    {
-        openx.writeDebug('SCRIPT LOAD SUCCESS ' + _this.config.url);
-        clearTimeout(_this.timer);
-        openx.writeActivity = false;
-    }
-}
-
-
-/**
- * The parser object
+ * SCRIPT URL FETCHER
  *
  */
 
-function parser(content)
+
+myUrls = [];
+
+function loader(options)
 {
-    this.content = content;
-    openx.writeActivity = true;
-
-    this.parse = function()
+    this.config = options,
+    this.timer = 0,
+    this.callback = function(object) {
+        clearTimeout(object.timer);
+        //openx.debug.write('object loaded:' + object.innerHTML);
+    },
+    this.construct = function(url)
     {
-        var fragment = document.createDocumentFragment();
-        var div = document.createElement('DIV');
-        div.innerHTML = '&nbsp;';
-        div.innerHTML += content;
-        fragment.appendChild(div);
+        var script;
 
-        openx.writeDebug('fragment: ' + div.getElementsByTagName('SCRIPT').length);
-        openx.writeDebug('content: ' + content);
 
-        for (var e = 0; e < div.childNodes.length; e++)
-        {
+        openx.debug.write('load: ' + url);
 
-            if (!div.childNodes[e].tagName) continue;
-            if(div.childNodes[e].getElementsByTagName('SCRIPT').length > 0) continue;
-            if (div.childNodes[e].tagName == 'SCRIPT') continue;
-            if (openx.zoneName == '') continue;
 
-            document.getElementById(openx.zoneName).appendChild(div.childNodes[e]);
-        }
-
-        // get all script content
-        for (var i = 0; i < div.getElementsByTagName('SCRIPT').length; i++)
-        {
-            openx.writeDebug('script');
-            var script = div.getElementsByTagName('SCRIPT')[i];
-            if (script.src != '')
-            {
-                var spc = new loader({
-                        url: script.src,
-                        timeout: 500
-                });
-
-                spc.load();
-            } else {
-
-                var eval_script = document.createElement('script');
-                if (navigator.appName.match(/internet explorer/gi) != null)
-                {
-                    eval_script.text = script.innerHTML;
-                } else {
-                    eval_script.appendChild( document.createTextNode(script.innerHTML) );
-                }
-
-                document.getElementById(openx.zoneName).appendChild(eval_script);
-                openx.writeDebug(eval_script.innerHTML);
-                try {
-                        eval(eval_script.innerHTML);
-                } catch (e) {
-                        openx.writeDebug('error: ' + e)
-                }
+        for (f = 0; f < myUrls.length; f++) {
+            if (myUrls[f] == url) {
+                return;
             }
         }
 
-        openx.writeActivity = false;
+         myUrls.push(url);
+
+        script = document.createElement('SCRIPT');
+        script.src = url.replace(/\&amp;/gi, '&');
+        script.type = 'text/javascript';
+
+        script.timer = setTimeout(function() {
+            window.stop();
+            //openx.debug.write('SCRIPT TIME OUT: ' + script.src);
+       }, this.config.timeout);
+
+        if (script.readyState) {
+
+            script.superClass = this;
+            script.onreadystatechange = function()
+            {
+                if (script.readyState == 'complete' || script.readyState == 'loaded') {
+                    script.superClass.callback(script);
+                }
+            }
+        } else {
+            script.onload = this.callback(script);
+        }
+
+
+       document.getElementsByTagName('HEAD')[0].appendChild(script);
+
+
+    }
+
+    //openx.debug.write('fetch new url: ' + this.config.url);
+    this.construct(this.config.url);
+}
+
+
+
+/**
+ *  DEBUGGER UTILITY
+ *
+ */
+function debug()
+{
+    this.debug = true;
+    this.write = function(line)
+    {
+        if (this.debug) {
+            if (typeof console !== 'undefined') {
+                console.log(line);
+            }
+        }
     }
 }
 
-/**
- * openx utility class
- */
 
-var openx =
-{
-    zoneIndex: 0,
-    zoneName: '',
-    writeActivity: false,
-    watchCycles: 0,
-    watch: false,
-    orgWrite: document.write,
-    debug: true,
-    init: function(options)
-    {
-        document.write = openx.write;
-        OA_arr = Array();
-        for (var i in OA_zones)
-        {
-            openx.writeDebug('found: ' + i);
-            OA_arr.push(i);
+/**
+ *  LAZY DELAYED WRITING
+ *
+ */
+var lazyWrite = {
+    writeInterval: 0,
+    code: '',
+    codeLength: 0,
+    codeCycles: 0,
+    hasWriteActivity: function() {
+
+        //openx.debug.write('checking cycles: ' + lazyWrite.codeCycles);
+
+        if (lazyWrite.code.length === lazyWrite.codeLength) {
+            //openx.debug.write('code length: '+lazyWrite.codeLength);
+            lazyWrite.codeCycles++;
         }
 
-        var spc = new loader({
-            url: options.url,
+        //if (lazyWrite.codeCycles === 3) {
+            clearInterval(lazyWrite.writeInterval);
+            openx.debug.write('stopping write activity: ' + lazyWrite.code);
+            lazyWrite.codeCycles = 0;
+            lazyWrite.writeInterval = 0;
+            openx.debug.write(lazyWrite.code);
+            var c = lazyWrite.code;
+            lazyWrite.code ='';
+            parser.parse(c);
+
+        //}
+    },
+    write: function(stuff) {
+
+
+        // reset/start
+        if (lazyWrite.writeInterval === 0) {
+            lazyWrite.code = '';
+            lazyWrite.codeLength = 0;
+           // openx.debug.write('setting new lazy interval');
+            lazyWrite.writeInterval = setTimeout(function() {
+                lazyWrite.hasWriteActivity()
+            }, 4);
+        }
+
+        lazyWrite.code += stuff;
+        lazyWrite.codeLength = lazyWrite.code.length;
+
+        //openx.debug.write('stuff man!: ' + lazyWrite.code);
+
+    }
+}
+
+var parser = {
+
+    parse: function(code) {
+
+        // declare variables
+        var zoneName, fragment, script, div, eval_script, i;
+
+        // set timestamp for watch comparison
+        this.writeTime();
+
+        // get the current zone name
+        zoneName = openx.zones[openx.currentZone];
+
+        // create empty fragment
+        fragment = document.createDocumentFragment();
+
+        // create empty div
+        div = document.createElement('DIV');
+
+        // IE6 needs some content
+        div.innerHTML = '&nbsp;';
+
+        code = code.replace(/&amp;/gi, '&');
+
+        // add the code
+        div.innerHTML += code;
+
+        // append it to the empty fragment
+        fragment.appendChild(div);
+
+        // debug
+        //openx.debug.write('WRITING CODE: ' + code);
+
+        // count the scripts found
+        numberOfScripts = div.getElementsByTagName('SCRIPT').length;
+
+        if (typeof zoneName !== 'undefined') {
+
+            addInnerHTML(document.getElementById(zoneName), div);
+
+        } else {
+            addInnerHTML(document.getElementsByTagName('HEAD')[0], div);
+        }
+    },
+    writeTime: function() {
+
+        var dateObject;
+        dateObject = new Date();
+        openx.writeLogtime = dateObject.getTime();
+
+
+    }
+}
+
+function watcher(options) {
+
+    this.cycles = 0;
+    this.config = options;
+    this.condition = false;
+    this.watchTimeout = 0;
+    this.watchInterval = 0;
+
+    this.watch = function() {
+        if (this.config.condition() === true) {
+            clearInterval(this.watchTimeout);
+            clearInterval(this.watchInterval);
+            if (typeof this.config.success === 'function') {
+                this.config.success();
+            }
+        }
+    }
+    _this = this;
+    this.watchInterval = setInterval(function() {
+        _this.watch()
+    }, this.config.interval);
+
+    this.watchTimeout = setTimeout(function() {
+        clearInterval(_this.watchInterval);
+        if (typeof _this.config.error === 'function') {
+            _this.config.error();
+        }
+
+    }, this.config.timeout);
+}
+
+/**
+ * The openx object
+ */
+var openx = {
+
+    config: {},
+    debug: new debug(),
+    orgWrite: document.write,
+    currentZone: -1,
+    zones: [],
+    writeLogtime: 0,
+    init: function(options)
+    {
+        var i, myDate;
+
+        for (i in OA_zones) {
+            openx.zones.push(i);
+        }
+
+        this.config = options;
+
+        myDate = new Date();
+        this.writeLogtime = myDate.getTime();
+
+        document.write = lazyWrite.write;
+
+        new loader({
+            url: this.config.url,
             timeout: 500
         });
 
-        spc.load();
-        this.setWatch();
+        new watcher({
+            condition: function() {
 
-    },
-    write: function(content)
-    {
-        var p = new parser(content);
-        p.parse();
-    },
-    setWatch: function()
-    {
-        this.watchCycles = 0;
+                var timeDifference, dateObject, zoneName;
+                dateObject = new Date();
+                timeDifference = dateObject.getTime() - openx.writeLogtime;
 
-        var _this = this;
-        this.watch = setInterval(function() {
-            if (_this.writeActivity == false) _this.watchCycles++;
-            if (_this.watchCycles == 5)
-            {
-                clearTimeout(_this.watch);
-                openx.writeDebug('done watching');
-                openx.loadOA();
-                _this.zoneIndex++;
+                // assume that there is no write activity anymore!
+                if (timeDifference > 525) {
+
+                    openx.currentZone += 1;
+
+                    if (openx.currentZone < openx.zones.length) {
+                        zoneName = openx.zones[openx.currentZone];
+                        myUrls = [];
+                        openx.debug.write('------------------------------ ' + zoneName + ' ------------------------------');
+                        OA_show(zoneName);
+                    } else {
+
+                        return true;
+                    }
+                }
+            },
+            callback: function() {
+                console.log('watchdog');
+            },
+            success: function() {
+                console.log('all done!');
+            },
+            error: function() {
+                console.log('aww no! :(');
+            },
+            timeout: 5000, // max running time
+            interval: 100 //evaluate condition
+        });
+    }
+}
+
+
+
+function addInnerHTML(to, html) {
+
+    var childs, tag, elem, atts, nodeName, isScript, nodeValue, it, e;
+
+    childs = html.childNodes.length;
+
+
+
+    for (it = 0; it < childs; it++) {
+
+        if (typeof html.childNodes[it].tagName !== 'undefined') {
+            //openx.debug.write('TAG' + html.childNodes[i].tagName);
+            elem = document.createElement(html.childNodes[it].tagName);
+
+
+            if (html.childNodes[it].tagName.toLowerCase() === 'script') {
+
+                if (html.childNodes[it].src !== '') {
+
+                    new loader({
+                        url: html.childNodes[it].src,
+                        timeout: 500
+                    });
+                } else {
+                   // openx.debug.write('EVAL'); document.createTextNode(script.innerHTML)
+                    evil(html.childNodes[it].innerHTML);
+                }
+                 continue;
             }
-        }, 100, this);
-    },
-    loadOA: function()
-    {
-        if (OA_arr[this.zoneIndex])
-        {
-            this.zoneName = OA_arr[this.zoneIndex];
-            this.setWatch();
-            openx.writeDebug('ZONE: ' + OA_arr[this.zoneIndex]);
-            OA_show(OA_arr[this.zoneIndex]);
-        } else {
-            openx.writeDebug('COMPLETED');
+
+
+
+
+            atts = html.childNodes[it].attributes.length;
+
+            for (e = 0; e < atts; e++) {
+                nodeName = html.childNodes[it].attributes[e].nodeName;
+                nodeValue = html.childNodes[it].attributes[e].nodeValue.replace(/&amp;/gi,'&');
+                //openx.debug.write('node namte: |' + nodeName + '| value: ' + nodeValue);
+
+                if (nodeName.toLowerCase() === 'onload') {
+
+                    ve = 'eval(\''+nodeValue.replace(/'/gi,"\\'")+'\')';
+
+                    //elem.onload =eval(nodeValue );
+
+                    elem.setAttribute(nodeName, nodeValue);
+
+                    //elem.setAttribute(nodeName,  ve);
+                } else if (nodeName === 'src') {
+                    elem.setAttribute(nodeName, decodeURIComponent(nodeValue));
+                } else {
+                    elem.setAttribute(nodeName, nodeValue);
+                }
+            }
+
+            to.appendChild(elem);
+
+            //make it recursive
+            if (html.childNodes[it].hasChildNodes) {
+                addInnerHTML (elem, html.childNodes[it]);
+            }
         }
-    },
-    writeDebug: function(line)
+    }
+}
+
+
+function evil(s) {
+    // create new script object
+    eval_script = document.createElement('script');
+
+    // add a textnode for IE, rest can use the text property
+    if (navigator.appName.match(/internet explorer/gi) != null)
     {
-        if (!this.debug) return;
-        if (typeof console != 'undefined')
-        {
-                console.log(line);
-        }
+        eval_script.text = s;
+    } else {
+        eval_script.appendChild( document.createTextNode(s) );
+    }
+
+    zoneName = openx.zones[openx.currentZone];
+
+    if (zoneName == null) {
+        //openx.debug.write('ZONE IS EMPTY');
+        // append it to the document
+        document.getElementsByTagName('HEAD')[0].appendChild(eval_script);
+
+    } else {
+        document.getElementById(zoneName).appendChild(eval_script);
+    }
+
+
+    try {
+        // evaluate the contents of the script block
+        eval(eval_script.innerHTML);
+    } catch (e) {
+        // openx.debug.write('error: ' + e)
     }
 }
