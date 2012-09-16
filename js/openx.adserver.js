@@ -201,9 +201,6 @@ var parser = {
         // append it to the empty fragment
         fragment.appendChild(div);
 
-        // debug
-        //openx.debug.write('WRITING CODE: ' + code);
-
         // count the scripts found
         numberOfScripts = div.getElementsByTagName('SCRIPT').length;
 
@@ -338,9 +335,8 @@ function addInnerHTML(to, html) {
     for (it = 0; it < childs; it++) {
 
         if (typeof html.childNodes[it].tagName !== 'undefined') {
-            //openx.debug.write('TAG' + html.childNodes[i].tagName);
+			
             elem = document.createElement(html.childNodes[it].tagName);
-
 
             if (html.childNodes[it].tagName.toLowerCase() === 'script') {
 
@@ -351,31 +347,25 @@ function addInnerHTML(to, html) {
                         timeout: 500
                     });
                 } else {
-                   // openx.debug.write('EVAL'); document.createTextNode(script.innerHTML)
                     evil(html.childNodes[it].innerHTML);
                 }
                  continue;
             }
-
-
-
-
+			
+			if (html.childNodes[it].attributes === null) {
+				continue;
+			}
+			
             atts = html.childNodes[it].attributes.length;
 
             for (e = 0; e < atts; e++) {
+				
                 nodeName = html.childNodes[it].attributes[e].nodeName;
-                nodeValue = html.childNodes[it].attributes[e].nodeValue.replace(/&amp;/gi,'&');
-                //openx.debug.write('node namte: |' + nodeName + '| value: ' + nodeValue);
+                nodeValue = html.childNodes[it].attributes[e].nodeValue;//.replace(/&amp;/gi,'&');
 
                 if (nodeName.toLowerCase() === 'onload') {
-
-                    ve = 'eval(\''+nodeValue.replace(/'/gi,"\\'")+'\')';
-
-                    //elem.onload =eval(nodeValue );
-
                     elem.setAttribute(nodeName, nodeValue);
 
-                    //elem.setAttribute(nodeName,  ve);
                 } else if (nodeName === 'src') {
                     elem.setAttribute(nodeName, decodeURIComponent(nodeValue));
                 } else {
