@@ -50,7 +50,6 @@ function loader(options)
     this.timer = 0,
     this.callback = function(object) {
         clearTimeout(object.timer);
-        //openx.debug.write('object loaded:' + object.innerHTML);
     },
     this.construct = function(url)
     {
@@ -66,7 +65,7 @@ function loader(options)
             }
         }
 
-         myUrls.push(url);
+        myUrls.push(url);
 
         script = document.createElement('SCRIPT');
         script.src = url.replace(/\&amp;/gi, '&');
@@ -74,7 +73,6 @@ function loader(options)
 
         script.timer = setTimeout(function() {
             window.stop();
-            //openx.debug.write('SCRIPT TIME OUT: ' + script.src);
        }, this.config.timeout);
 
         if (script.readyState) {
@@ -96,7 +94,6 @@ function loader(options)
 
     }
 
-    //openx.debug.write('fetch new url: ' + this.config.url);
     this.construct(this.config.url);
 }
 
@@ -129,45 +126,32 @@ var lazyWrite = {
     code: '',
     codeLength: 0,
     codeCycles: 0,
-    hasWriteActivity: function() {
+    hasWriteActivity: function(c) {
 
-        //openx.debug.write('checking cycles: ' + lazyWrite.codeCycles);
+        clearTimeout(lazyWrite.writeInterval);
+        lazyWrite.writeInterval = 0;
 
-        if (lazyWrite.code.length === lazyWrite.codeLength) {
-            //openx.debug.write('code length: '+lazyWrite.codeLength);
-            lazyWrite.codeCycles++;
-        }
+        parser.parse(c);
 
-        //if (lazyWrite.codeCycles === 3) {
-            clearInterval(lazyWrite.writeInterval);
-            openx.debug.write('stopping write activity: ' + lazyWrite.code);
-            lazyWrite.codeCycles = 0;
-            lazyWrite.writeInterval = 0;
-            openx.debug.write(lazyWrite.code);
-            var c = lazyWrite.code;
-            lazyWrite.code ='';
-            parser.parse(c);
 
-        //}
     },
     write: function(stuff) {
 
+        lazyWrite.code += stuff;
 
         // reset/start
         if (lazyWrite.writeInterval === 0) {
-            lazyWrite.code = '';
+
             lazyWrite.codeLength = 0;
-           // openx.debug.write('setting new lazy interval');
+            openx.debug.write('setting new lazy interval');
             lazyWrite.writeInterval = setTimeout(function() {
-                lazyWrite.hasWriteActivity()
+                var c = lazyWrite.code.replace(/\&amp;/gi,'&');
+
+                lazyWrite.code = '';
+                lazyWrite.hasWriteActivity(c);
+
             }, 4);
         }
-
-        lazyWrite.code += stuff;
-        lazyWrite.codeLength = lazyWrite.code.length;
-
-        //openx.debug.write('stuff man!: ' + lazyWrite.code);
-
     }
 }
 
@@ -335,7 +319,7 @@ function addInnerHTML(to, html) {
     for (it = 0; it < childs; it++) {
 
         if (typeof html.childNodes[it].tagName !== 'undefined') {
-			
+
             elem = document.createElement(html.childNodes[it].tagName);
 
             if (html.childNodes[it].tagName.toLowerCase() === 'script') {
@@ -351,17 +335,17 @@ function addInnerHTML(to, html) {
                 }
                  continue;
             }
-			
-			if (html.childNodes[it].attributes === null) {
-				continue;
-			}
-			
+
+            if (html.childNodes[it].attributes === null) {
+                continue;
+            }
+
             atts = html.childNodes[it].attributes.length;
 
             for (e = 0; e < atts; e++) {
-				
+
                 nodeName = html.childNodes[it].attributes[e].nodeName;
-                nodeValue = html.childNodes[it].attributes[e].nodeValue;//.replace(/&amp;/gi,'&');
+                nodeValue = html.childNodes[it].attributes[e].nodeValue;//.replace(/\&amp;/gi,'&');
 
                 if (nodeName.toLowerCase() === 'onload') {
                     elem.setAttribute(nodeName, nodeValue);
@@ -410,7 +394,9 @@ function evil(s) {
 
     try {
         // evaluate the contents of the script block
+        openx.debug.write('EVALLING'+eval_script.innerHTML);
         eval(eval_script.innerHTML);
+        openx.debug.write('GOOGLE AD HEIGHT'+google_ad_height);
     } catch (e) {
         // openx.debug.write('error: ' + e)
     }
