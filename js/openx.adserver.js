@@ -49,26 +49,18 @@ function loader(options)
     this.config = options,
     this.timer = 0,
     this.callback = function(object) {
+		//lazyWrite.paused = false;
+		//openx.hasWriteActivity();
         clearTimeout(object.timer);
     },
     this.construct = function(url)
     {
         var script;
-
-
+		
         openx.debug.write('load: ' + url);
 
-
-        for (f = 0; f < myUrls.length; f++) {
-            if (myUrls[f] == url) {
-                return;
-            }
-        }
-
-        myUrls.push(url);
-
         script = document.createElement('SCRIPT');
-        script.src = url.replace(/\&amp;/gi, '&');
+        script.src = decodeURIComponent(url);
         script.type = 'text/javascript';
 
         script.timer = setTimeout(function() {
@@ -122,6 +114,7 @@ function debug()
  *
  */
 var lazyWrite = {
+	paused: false,
     writeInterval: 0,
     code: '',
     codeLength: 0,
@@ -143,14 +136,12 @@ var lazyWrite = {
         if (lazyWrite.writeInterval === 0) {
 
             lazyWrite.codeLength = 0;
-            openx.debug.write('setting new lazy interval');
             lazyWrite.writeInterval = setTimeout(function() {
                 var c = lazyWrite.code.replace(/\&amp;/gi,'&');
-
                 lazyWrite.code = '';
                 lazyWrite.hasWriteActivity(c);
 
-            }, 4);
+            }, 1);
         }
     }
 }
@@ -292,13 +283,13 @@ var openx = {
                 }
             },
             callback: function() {
-                console.log('watchdog');
+                openx.debug.write('watchdog');
             },
             success: function() {
-                console.log('all done!');
+                openx.debug.write('all done!');
             },
             error: function() {
-                console.log('aww no! :(');
+                openx.debug.write('aww no! :(');
             },
             timeout: 5000, // max running time
             interval: 100 //evaluate condition
@@ -391,7 +382,7 @@ function evil(s) {
         document.getElementById(zoneName).appendChild(eval_script);
     }
 
-
+	/*
     try {
         // evaluate the contents of the script block
         openx.debug.write('EVALLING'+eval_script.innerHTML);
@@ -399,5 +390,5 @@ function evil(s) {
         openx.debug.write('GOOGLE AD HEIGHT'+google_ad_height);
     } catch (e) {
         // openx.debug.write('error: ' + e)
-    }
+    }*/
 }
