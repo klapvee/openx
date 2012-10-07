@@ -49,8 +49,6 @@ function loader(options)
     this.config = options,
     this.timer = 0,
     this.callback = function(object) {
-		//lazyWrite.paused = false;
-		//openx.hasWriteActivity();
         clearTimeout(object.timer);
     },
     this.construct = function(url)
@@ -381,14 +379,4 @@ function evil(s) {
     } else {
         document.getElementById(zoneName).appendChild(eval_script);
     }
-
-	/*
-    try {
-        // evaluate the contents of the script block
-        openx.debug.write('EVALLING'+eval_script.innerHTML);
-        eval(eval_script.innerHTML);
-        openx.debug.write('GOOGLE AD HEIGHT'+google_ad_height);
-    } catch (e) {
-        // openx.debug.write('error: ' + e)
-    }*/
 }
